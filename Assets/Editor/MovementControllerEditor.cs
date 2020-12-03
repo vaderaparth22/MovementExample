@@ -51,6 +51,16 @@ public class MovementControllerEditor : Editor
         SetWaypoint(wpArrayCount.intValue - 1, toAdd); //Call set waypoint, setting the last new value to null
     }
 
+    private void AddDuplicateWaypointAfterIndex(int index)
+    {
+        AddWaypoint(GetWaypointAt(index));
+
+        for (int i = wpArrayCount.intValue - 1; i > index; i--)
+        {
+            Swap(i, i - 1);
+        }
+    }
+
     private void RemoveWaypointAtIndex(int index)
     {
         for (int i = index; i < wpArrayCount.intValue - 1; i++)                 //Starting at the index, move all of them down by one
@@ -80,12 +90,22 @@ public class MovementControllerEditor : Editor
         for (int i = 0; i < wpArrayCount.intValue; i++)
         {
             GUILayout.BeginHorizontal();                //Every GUI element created after this call will belong to the same horizontal line
+
+            bool initialEnabledSetting = GUI.enabled;   //Save the current state of the UI, it could be already disabled
+
+            GUI.enabled = (GetWaypointAt(i)) && initialEnabledSetting;
+
+            if (GUILayout.Button("D", GUILayout.Width(20f)))  //A button of width 20
+                AddDuplicateWaypointAfterIndex(i);
+
+            GUI.enabled = initialEnabledSetting;
+
             Transform result = EditorGUILayout.ObjectField(GetWaypointAt(i), typeof(Transform), true) as Transform; //Make a field that can be set to any object, and returns the object in it
 
             if (GUI.changed)                            //If any gui values have changed this update
                 SetWaypoint(i, result);                 //set the wp
 
-            bool initialEnabledSetting = GUI.enabled;   //Save the current state of the UI, it could be already disabled
+            initialEnabledSetting = GUI.enabled;
 
             GUI.enabled = (i > 0) && initialEnabledSetting;
             if (GUILayout.Button("^", GUILayout.Width(20f)))
@@ -153,10 +173,14 @@ public class MovementControllerEditor : Editor
         {
             Color originalHandleColor = Handles.color;                                                      //Like Enabled, we must perserve the original handle color!
             Handles.color = Color.green;                                                                    //Set the color of all 
+
             for (int i = 0; i < mc.waypoints.Length - 1; i++)                                               //Length minus one, because the last one doesnt have a "next"
                 if (mc.waypoints[i] && mc.waypoints[i + 1])
                     Handles.DrawLine(mc.waypoints[i].position, mc.waypoints[i + 1].position);                   //Draw a line from i to i+1
-            Handles.DrawLine(mc.waypoints[mc.waypoints.Length - 1].position, mc.waypoints[0].position);     //Draw line from last element back to first element
+
+            if(mc.waypoints[mc.waypoints.Length - 1] && mc.waypoints[0])
+                Handles.DrawLine(mc.waypoints[mc.waypoints.Length - 1].position, mc.waypoints[0].position);     //Draw line from last element back to first element
+
             Handles.color = originalHandleColor;                                                            //Reset the handle back to the original!
         }
 
