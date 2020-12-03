@@ -14,7 +14,7 @@ public class UIEvents : MonoBehaviour
     #region SAVE
     public void SaveBinary()
     {
-
+        spawner.SaveBinary();
     }
 
     public void SaveXML()

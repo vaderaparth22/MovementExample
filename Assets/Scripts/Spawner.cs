@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 public class Spawner : MonoBehaviour
 {
@@ -11,12 +13,11 @@ public class Spawner : MonoBehaviour
     public LayerMask layerToCheck;
 
     List<GameObject> allObjects;
-    ObjectsData dataClass;
+    ObjectInfoSaveLoad objSaveLoad = new ObjectInfoSaveLoad();
 
     private void Start()
     {
         SpawnAtStart();
-        dataClass = new ObjectsData();
     }
 
     void SpawnAtStart()
@@ -40,11 +41,13 @@ public class Spawner : MonoBehaviour
                 obj = Instantiate(spherePrefab, pos, rot);
             }
 
-            SetRandomColor(obj);
+            SetRandomColor(obj.gameObject);
 
             allObjects.Add(obj);
-            dataClass.AddPosition(pos);
-            dataClass.AddRotation(rot);
+
+            ObjectInfo info = new ObjectInfo();
+            info.SetPosition(pos);
+            objSaveLoad.AddInfo(info);
         }
     }
 
@@ -74,32 +77,58 @@ public class Spawner : MonoBehaviour
             Destroy(item);
 
         allObjects.Clear();
-        dataClass.positionList.Clear();
-        dataClass.rotationList.Clear();
 
         SpawnAtStart();
+    }
+
+    public void SaveBinary()
+    {
+        BinaryDataSaving.SaveDataToDisk("myData", objSaveLoad);
+    }
+
+    public void LoadBinary()
+    {
+        
     }
 }
 
 [System.Serializable]
-class ObjectsData
+class ObjectInfoSaveLoad
 {
-    public List<Vector3> positionList { get; private set; }
-    public List<Quaternion> rotationList { get; private set; }
+    List<ObjectInfo> objectInfoList = new List<ObjectInfo>();
 
-    public ObjectsData()
+    public void AddInfo(ObjectInfo objectInfoRef)
     {
-        positionList = new List<Vector3>();
-        rotationList = new List<Quaternion>();
+        objectInfoList.Add(objectInfoRef);
+    }
+}
+
+static class BinaryDataSaving
+{
+    public static void SaveDataToDisk(string filePath, object toSave)
+    {
+        BinaryFormatter bf = new BinaryFormatter();
+        string path = Path.Combine(Application.streamingAssetsPath, filePath);
+        FileStream file = File.Create(path);
+        bf.Serialize(file, toSave);
+        file.Close();
     }
 
-    public void AddPosition(Vector3 posToAdd)
+    public static T LoadDataFromDisk<T>(string filePath)
     {
-        positionList.Add(posToAdd);
-    }
+        T toRet;
+        string path = Path.Combine(Application.streamingAssetsPath, filePath);
 
-    public void AddRotation(Quaternion rotToAdd)
-    {
-        rotationList.Add(rotToAdd);
+        if (File.Exists(path))
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            FileStream file = File.Open(path, FileMode.Open);
+            toRet = (T)bf.Deserialize(file);
+            file.Close();
+        }
+        else
+            toRet = default(T);
+
+        return toRet;
     }
 }
