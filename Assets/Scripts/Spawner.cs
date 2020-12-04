@@ -12,15 +12,18 @@ public class Spawner : MonoBehaviour
     public Transform spawnArea;
     public LayerMask layerToCheck;
 
+    const string fileName = "myData";
+
     List<GameObject> allObjects;
+    List<ObjectInfo> objInfoList;
     ObjectInfoSaveLoad objSaveLoad = new ObjectInfoSaveLoad();
 
     private void Start()
     {
-        SpawnAtStart();
+        SpawnObjects();
     }
 
-    void SpawnAtStart()
+    void SpawnObjects()
     {
         allObjects = new List<GameObject>();
 
@@ -41,13 +44,49 @@ public class Spawner : MonoBehaviour
                 obj = Instantiate(spherePrefab, pos, rot);
             }
 
-            SetRandomColor(obj.gameObject);
+            obj.transform.name = randomNumber.ToString();
+
+            GetOrSetRandomColor(obj.gameObject);
 
             allObjects.Add(obj);
+        }
+    }
 
-            ObjectInfo info = new ObjectInfo();
-            info.SetPosition(pos);
-            objSaveLoad.AddInfo(info);
+    void SpawnFromBinary(ObjectInfoSaveLoad loadedClass)
+    {
+        List<ObjectInfo> infoList = loadedClass.GetInfoList();
+
+        for (int i = 0; i < infoList.Count; i++)
+        {
+            ObjectInfo info = infoList[i];
+
+            Vector3 pos = info.GetPosition();
+            Vector3 rot = info.GetRotation();
+            Vector3 velo = info.GetVelocity();
+            Vector3 angularVelo = info.GetAngularVelocity();
+            Color color = info.GetColor();
+            int shapeId = info.GetShapeId();
+
+            GameObject obj;
+
+            if (shapeId == 0)
+            {
+                obj = Instantiate(cubePrefab);
+                
+            }
+            else
+            {
+                obj = Instantiate(spherePrefab);
+            }
+
+            obj.transform.name = shapeId.ToString();
+            obj.transform.position = pos;
+            obj.transform.eulerAngles = rot;
+            obj.GetComponent<MeshRenderer>().material.color = color;
+            obj.GetComponent<Rigidbody>().velocity = velo;
+            obj.GetComponent<Rigidbody>().angularVelocity = angularVelo;
+
+            allObjects.Add(obj);
         }
     }
 
@@ -66,9 +105,11 @@ public class Spawner : MonoBehaviour
         return pos;
     }
 
-    void SetRandomColor(GameObject obj)
+    Color GetOrSetRandomColor(GameObject obj)
     {
-        obj.GetComponent<MeshRenderer>().material.color = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+        Color newColor = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+        obj.GetComponent<MeshRenderer>().material.color = newColor;
+        return newColor;
     }
 
     public void ResetAndSpawn()
@@ -77,18 +118,40 @@ public class Spawner : MonoBehaviour
             Destroy(item);
 
         allObjects.Clear();
+        objSaveLoad.GetInfoList().Clear();
 
-        SpawnAtStart();
+        SpawnObjects();
     }
 
     public void SaveBinary()
     {
-        BinaryDataSaving.SaveDataToDisk("myData", objSaveLoad);
+        for (int i = 0; i < allObjects.Count; i++)
+        {
+            Transform current = allObjects[i].transform;
+
+            ObjectInfo info = new ObjectInfo();
+            info.SetPosition(current.position);
+            info.SetRotation(current.eulerAngles);
+            info.SetShapeId(int.Parse(current.name));
+            info.SetColor(current.GetComponent<MeshRenderer>().material.color);
+            info.SetVelocity(current.GetComponent<Rigidbody>().velocity);
+            info.SetAngularVelocity(current.GetComponent<Rigidbody>().angularVelocity);
+
+            objSaveLoad.AddInfo(info);
+        }
+
+        BinaryDataSaving.SaveDataToDisk(fileName, objSaveLoad);
     }
 
     public void LoadBinary()
     {
-        
+        foreach (GameObject item in allObjects)
+            Destroy(item);
+
+        allObjects.Clear();
+
+        ObjectInfoSaveLoad loadedClass = BinaryDataSaving.LoadDataFromDisk<ObjectInfoSaveLoad>(fileName);
+        SpawnFromBinary(loadedClass);
     }
 }
 
@@ -97,9 +160,19 @@ class ObjectInfoSaveLoad
 {
     List<ObjectInfo> objectInfoList = new List<ObjectInfo>();
 
+    public void FillInfoList(List<ObjectInfo> dataList)
+    {
+        this.objectInfoList = dataList;
+    }
+
     public void AddInfo(ObjectInfo objectInfoRef)
     {
         objectInfoList.Add(objectInfoRef);
+    }
+
+    public List<ObjectInfo> GetInfoList()
+    {
+        return this.objectInfoList;
     }
 }
 

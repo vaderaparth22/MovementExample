@@ -32,7 +32,7 @@ public class UIEvents : MonoBehaviour
     #region LOAD
     public void LoadBinary()
     {
-
+        spawner.LoadBinary();
     }
 
     public void LoadXML()
