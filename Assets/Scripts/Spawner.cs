@@ -190,6 +190,39 @@ public class Spawner : MonoBehaviour
         SpawnWithData(loadedClass);
     }
     #endregion
+
+    #region JsonSaving
+    public void JsonSave()
+    {
+        for(int i = 0; i < allObjects.Count; i++)
+        {
+            Transform current = allObjects[i].transform;
+
+            ObjectInfo info = new ObjectInfo();
+            info.SetPosition(current.position);
+            info.SetRotation(current.eulerAngles);
+            info.SetShapeId(int.Parse(current.name));
+            info.SetColor(current.GetComponent<MeshRenderer>().material.color);
+            info.SetVelocity(current.GetComponent<Rigidbody>().velocity);
+            info.SetAngularVelocity(current.GetComponent<Rigidbody>().angularVelocity);
+
+            objSaveLoad.AddInfo(info);
+        }
+
+        JSONSerialization.Save(objSaveLoad);
+    }
+
+    public void JsonLoad()
+    {
+        foreach (GameObject item in allObjects)
+            Destroy(item);
+
+        allObjects.Clear();
+
+        ObjectInfoSaveLoad loadedClass = JSONSerialization.Load<ObjectInfoSaveLoad>();
+        SpawnWithData(loadedClass);
+    }
+    #endregion
 }
 
 [System.Serializable]

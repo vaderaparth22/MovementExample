@@ -24,7 +24,7 @@ public class UIEvents : MonoBehaviour
 
     public void SaveJSON()
     {
-
+        spawner.JsonSave();
     }
     #endregion
 
@@ -42,7 +42,7 @@ public class UIEvents : MonoBehaviour
     
     public void LoadJSON()
     {
-
+        spawner.JsonLoad();
     }
     #endregion
 }
