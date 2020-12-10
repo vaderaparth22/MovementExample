@@ -1,16 +1,23 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Xml;
+using System.Xml.Serialization;
 
 [System.Serializable]
 public class ObjectInfo
 {
-    int shapeId;
-    Vector3Serializable pos;
-    Vector3Serializable rot;
-    Vector3Serializable color;
-    Vector3Serializable velo;
-    Vector3Serializable angularVelo;
+    public int shapeId;
+
+    public Vector3Serializable pos;
+
+    public Vector3Serializable rot;
+
+    public Vector3Serializable color;
+
+    public Vector3Serializable velo;
+
+    public Vector3Serializable angularVelo;
 
     public void SetPosition(Vector3 posToSet)
     {

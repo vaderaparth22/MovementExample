@@ -19,7 +19,7 @@ public class UIEvents : MonoBehaviour
 
     public void SaveXML()
     {
-
+        spawner.SaveXML();
     }
 
     public void SaveJSON()
@@ -37,7 +37,7 @@ public class UIEvents : MonoBehaviour
 
     public void LoadXML()
     {
-
+        spawner.LoadXML();
     }
     
     public void LoadJSON()

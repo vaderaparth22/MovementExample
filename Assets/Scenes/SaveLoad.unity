@@ -667,7 +667,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6cac0b1f7c10f0149945280577ab196f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spawnCount: 5
+  spawnCount: 10
   cubePrefab: {fileID: 6577969970834887012, guid: 4b48094a91b1d514dab75f74bf5a2e55, type: 3}
   spherePrefab: {fileID: 2188107424980194558, guid: f0e21f1e3833702468daf61e6430b338, type: 3}
   spawnArea: {fileID: 1183387555}

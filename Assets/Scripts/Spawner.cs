@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Xml.Serialization;
 
 public class Spawner : MonoBehaviour
 {
@@ -13,6 +14,7 @@ public class Spawner : MonoBehaviour
     public LayerMask layerToCheck;
 
     const string fileName = "myData";
+    const string XmlfileName = "xmldata.xml";
 
     List<GameObject> allObjects;
     List<ObjectInfo> objInfoList;
@@ -52,7 +54,7 @@ public class Spawner : MonoBehaviour
         }
     }
 
-    void SpawnFromBinary(ObjectInfoSaveLoad loadedClass)
+    void SpawnWithData(ObjectInfoSaveLoad loadedClass)
     {
         List<ObjectInfo> infoList = loadedClass.GetInfoList();
 
@@ -123,6 +125,7 @@ public class Spawner : MonoBehaviour
         SpawnObjects();
     }
 
+    #region Binary Saving
     public void SaveBinary()
     {
         for (int i = 0; i < allObjects.Count; i++)
@@ -151,19 +154,50 @@ public class Spawner : MonoBehaviour
         allObjects.Clear();
 
         ObjectInfoSaveLoad loadedClass = BinaryDataSaving.LoadDataFromDisk<ObjectInfoSaveLoad>(fileName);
-        SpawnFromBinary(loadedClass);
+        SpawnWithData(loadedClass);
     }
+    #endregion
+
+    #region XML Saving
+    public void SaveXML()
+    {
+        for (int i = 0; i < allObjects.Count; i++)
+        {
+            Transform current = allObjects[i].transform;
+
+            ObjectInfo info = new ObjectInfo();
+            info.SetPosition(current.position);
+            info.SetRotation(current.eulerAngles);
+            info.SetShapeId(int.Parse(current.name));
+            info.SetColor(current.GetComponent<MeshRenderer>().material.color);
+            info.SetVelocity(current.GetComponent<Rigidbody>().velocity);
+            info.SetAngularVelocity(current.GetComponent<Rigidbody>().angularVelocity);
+
+            objSaveLoad.AddInfo(info);
+        }
+
+        XMLDataSerialization.Write(XmlfileName, objSaveLoad);
+    }
+
+    public void LoadXML()
+    {
+        foreach (GameObject item in allObjects)
+            Destroy(item);
+
+        allObjects.Clear();
+
+        ObjectInfoSaveLoad loadedClass = XMLDataSerialization.Read<ObjectInfoSaveLoad>(XmlfileName);
+        SpawnWithData(loadedClass);
+    }
+    #endregion
 }
 
 [System.Serializable]
-class ObjectInfoSaveLoad
+[XmlRoot("ObjectSaveLoadClass")]
+public class ObjectInfoSaveLoad
 {
-    List<ObjectInfo> objectInfoList = new List<ObjectInfo>();
-
-    public void FillInfoList(List<ObjectInfo> dataList)
-    {
-        this.objectInfoList = dataList;
-    }
+    [XmlArray("Objects"), XmlArrayItem("ObjectInfoList")]
+    public List<ObjectInfo> objectInfoList = new List<ObjectInfo>();
 
     public void AddInfo(ObjectInfo objectInfoRef)
     {
